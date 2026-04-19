@@ -1,7 +1,16 @@
+import os
+import shutil
+import sys
 import yaml
 import pytesseract
 from PIL import Image
 from src.data.schemas import OCRResult
+
+# Auto-configure Tesseract path on Windows when not in PATH
+if sys.platform == "win32" and not shutil.which("tesseract"):
+    _win_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    if os.path.exists(_win_path):
+        pytesseract.pytesseract.tesseract_cmd = _win_path
 
 
 def extract_text(image: Image.Image, config_path: str = "configs/ocr_config.yaml") -> OCRResult:
