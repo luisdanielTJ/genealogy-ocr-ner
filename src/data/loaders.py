@@ -1,6 +1,6 @@
 from datasets import load_dataset
 from PIL import Image
-from src.data.schemas import Document, Entity
+from src.data.schemas import Document
 
 
 def load_iam(max_train: int = 2000, max_val: int = 500) -> tuple[list[Document], list[Document]]:
