@@ -15,18 +15,23 @@ def generate_document() -> Document:
     return Document(image=image, text=full_text, entities=entities, source="synthetic")
 
 
-def generate_dataset(n: int = 1500) -> list[Document]:
+def generate_dataset(n: int = 1500, seed: int | None = None) -> list[Document]:
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        Faker.seed(seed)
     return [generate_document() for _ in range(n)]
 
 
 def _generate_fields() -> list[tuple[str, str]]:
-    return [
-        ("NAME", fake.name()),
-        ("DATE", fake.date_of_birth(minimum_age=0, maximum_age=100).strftime("%B %d, %Y")),
-        ("LOCATION", f"{fake.city()}, {fake.state()}"),
-        ("AGE", str(random.randint(1, 95))),
-        ("RELATIONSHIP", random.choice(_RELATIONSHIPS)),
-    ]
+    generators = {
+        "NAME": lambda: fake.name(),
+        "DATE": lambda: fake.date_of_birth(minimum_age=0, maximum_age=100).strftime("%B %d, %Y"),
+        "LOCATION": lambda: f"{fake.city()}, {fake.state()}",
+        "AGE": lambda: str(random.randint(1, 95)),
+        "RELATIONSHIP": lambda: random.choice(_RELATIONSHIPS),
+    }
+    return [(label, generators[label]()) for label in _FIELD_ORDER]
 
 
 def _render(fields: list[tuple[str, str]]) -> tuple[Image.Image, list[Entity], str]:
