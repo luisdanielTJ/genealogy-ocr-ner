@@ -1,7 +1,14 @@
 .venv/
 __pycache__/
 *.pyc
+*.pyo
 models/
+!models/.gitkeep
 *.egg-info/
 .env
 .DS_Store
+.ipynb_checkpoints/
+dist/
+*.log
+runs/
+Thumbs.db
