@@ -1,5 +1,6 @@
+import numpy as np
 import pytest
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 
 @pytest.fixture
@@ -14,7 +15,6 @@ def simple_text_image():
 @pytest.fixture
 def noisy_image():
     """Slightly rotated and noisy version of the simple image."""
-    import numpy as np
     img = Image.new("RGB", (400, 100), color="white")
     draw = ImageDraw.Draw(img)
     draw.text((10, 35), "John Smith 1850", fill="black")

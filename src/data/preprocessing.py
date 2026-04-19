@@ -13,12 +13,14 @@ def preprocess(image: Image.Image) -> Image.Image:
 
 
 def _deskew(image: np.ndarray) -> np.ndarray:
-    coords = np.column_stack(np.where(image < 255))
+    coords = np.column_stack(np.where(image < 255)[::-1]).astype(np.float32)
     if len(coords) < 5:
         return image
     angle = cv2.minAreaRect(coords)[-1]
     if angle < -45:
         angle = 90 + angle
+    elif angle > 45:
+        angle = angle - 90
     h, w = image.shape
     center = (w // 2, h // 2)
     M = cv2.getRotationMatrix2D(center, angle, 1.0)
