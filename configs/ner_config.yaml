@@ -1,0 +1,26 @@
+base_model: dslim/bert-base-NER
+output_dir: models/ner-genealogy
+labels:
+  - O
+  - B-NAME
+  - I-NAME
+  - B-DATE
+  - I-DATE
+  - B-LOCATION
+  - I-LOCATION
+  - B-AGE
+  - I-AGE
+  - B-RELATIONSHIP
+  - I-RELATIONSHIP
+training:
+  max_seq_length: 128
+  num_train_epochs: 5
+  per_device_train_batch_size: 16
+  per_device_eval_batch_size: 16
+  learning_rate: 2.0e-5
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  logging_steps: 50
+  eval_steps: 200
+  save_steps: 200
+  fp16: true

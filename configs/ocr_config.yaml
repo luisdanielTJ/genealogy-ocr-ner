@@ -1,0 +1,22 @@
+tesseract:
+  psm: 6
+  lang: eng
+  oem: 3
+
+trocr:
+  base_model: microsoft/trocr-base-handwritten
+  output_dir: models/trocr-genealogy
+  training:
+    max_train_samples: 2000
+    max_val_samples: 500
+    num_train_epochs: 5
+    per_device_train_batch_size: 8
+    per_device_eval_batch_size: 8
+    learning_rate: 5.0e-5
+    warmup_steps: 500
+    weight_decay: 0.01
+    logging_steps: 100
+    eval_steps: 500
+    save_steps: 500
+    fp16: true
+    max_target_length: 128
