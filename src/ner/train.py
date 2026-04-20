@@ -120,7 +120,7 @@ def finetune(
         args=args,
         train_dataset=train_ds,
         eval_dataset=val_ds,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         data_collator=DataCollatorForTokenClassification(tokenizer),
         compute_metrics=_compute_metrics,
     )
