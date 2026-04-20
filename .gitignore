@@ -12,3 +12,5 @@ dist/
 *.log
 runs/
 Thumbs.db
+.claude/
+docs/
