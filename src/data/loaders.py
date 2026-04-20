@@ -5,7 +5,7 @@ from src.data.schemas import Document
 
 def load_iam(max_train: int = 2000, max_val: int = 500) -> tuple[list[Document], list[Document]]:
     """Loads IAM Handwriting Database line-level samples for OCR fine-tuning."""
-    ds = load_dataset("Teklia/IAM-line", trust_remote_code=True)
+    ds = load_dataset("Teklia/IAM-line")
 
     def _to_doc(sample) -> Document:
         return Document(
@@ -24,7 +24,7 @@ def load_iam(max_train: int = 2000, max_val: int = 500) -> tuple[list[Document],
 
 def load_funsd() -> tuple[list[Document], list[Document]]:
     """Loads FUNSD scanned form dataset for OCR fine-tuning (image→concatenated text)."""
-    ds = load_dataset("nielsr/funsd", trust_remote_code=True)
+    ds = load_dataset("nielsr/funsd")
 
     def _to_doc(sample) -> Document:
         words = [w for w in sample["words"] if w.strip()]
