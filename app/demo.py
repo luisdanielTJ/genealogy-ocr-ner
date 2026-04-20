@@ -21,7 +21,13 @@ LABEL_COLORS = {
 
 TESSERACT_CONFIG = PipelineConfig(
     ocr_model="tesseract",
-    confidence_threshold=0.0,
+    confidence_threshold=0.5,
+    max_sequence_length=128,
+)
+
+TROCR_CONFIG = PipelineConfig(
+    ocr_model="models/trocr-genealogy",
+    confidence_threshold=0.5,
     max_sequence_length=128,
 )
 
@@ -33,7 +39,7 @@ def process_image(image: Image.Image):
     preprocessed = preprocess(image)
 
     tesseract_result = tesseract_extract(preprocessed)
-    pipeline_result = run(image, TESSERACT_CONFIG)
+    pipeline_result = run(image, TROCR_CONFIG)
 
     highlighted = _highlight_entities(pipeline_result.raw_text, pipeline_result.entities)
 
