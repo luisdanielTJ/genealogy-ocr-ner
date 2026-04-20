@@ -34,6 +34,73 @@ Structured Output    ← {NAME, DATE, LOCATION, AGE, RELATIONSHIP}
 
 ---
 
+## Preprocessing Deep Dive
+
+Preprocessing is often the difference between a model that works in the lab and one that works on real documents. Historical genealogy records have faded ink, yellowed paper, scan artifacts, and physical damage. These steps handle the most common issues before the image reaches the OCR model — garbage in, garbage out.
+
+### Step 1 — Grayscale conversion
+```python
+gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
+```
+Converts RGB (3 channels) to a single intensity channel (0–255).
+
+**Why:** OCR only cares about ink vs paper — color is irrelevant noise. A yellowed 150-year-old document and a clean white modern form both become the same contrast after this step. Also reduces data by 66%, making everything downstream faster.
+
+### Step 2 — Otsu Binarization
+```python
+_, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+```
+Converts grayscale to pure black and white. Every pixel becomes either 0 (ink) or 255 (paper).
+
+**What makes Otsu special:** Instead of a fixed threshold (e.g., "anything below 128 is black"), Otsu's algorithm analyzes the pixel intensity histogram of the specific image and automatically finds the optimal cutoff. This matters for historical documents — a dark 1880 scan has a completely different histogram than a modern photocopy. A fixed threshold would destroy one and work on the other. Otsu adapts to each image individually.
+
+### Step 3 — Deskew
+```python
+coords = np.column_stack(np.where(image < 255)[::-1]).astype(np.float32)
+angle = cv2.minAreaRect(coords)[-1]
+M = cv2.getRotationMatrix2D(center, angle, 1.0)
+return cv2.warpAffine(image, M, (w, h), ...)
+```
+Detects and corrects the rotation angle of the document.
+
+**How it works:**
+1. Find all dark pixels (ink) in the binary image
+2. Fit the tightest possible bounding rectangle around them (`minAreaRect`)
+3. The angle of that rectangle = the skew angle of the document
+4. Rotate the image by that angle to straighten it
+
+**Why:** Even a 2–3 degree tilt causes OCR accuracy to drop significantly because models expect horizontal text lines. Scanned historical documents are almost never perfectly straight.
+
+**Edge case we handled:** OpenCV changed how it reports angles between versions. We handle both old and new behavior:
+```python
+if angle < -45:    angle = 90 + angle   # OpenCV < 4.x
+elif angle > 45:   angle = angle - 90   # OpenCV 4.x+
+```
+
+### Step 4 — Gaussian Denoising
+```python
+denoised = cv2.GaussianBlur(deskewed, (3, 3), 0)
+```
+Applies a gentle 3×3 blur to smooth out random pixel noise.
+
+**Why:** Scanned documents have speckles, grain, and artifacts from the scanning process or paper degradation. These random pixels confuse OCR models into seeing characters that aren't there. A 3×3 kernel is the minimum effective size — removes noise without blurring thin handwriting strokes. A larger kernel (5×5, 7×7) would start destroying character detail.
+
+### Additional steps for production at Ancestry's scale
+
+The four steps above handle the common cases. For Ancestry's diverse document corpus you'd add:
+
+| Step | When needed |
+|---|---|
+| **Adaptive thresholding** (instead of global Otsu) | Documents with uneven lighting — one corner darker than another |
+| **CLAHE contrast enhancement** | Very faded documents where ink is barely visible |
+| **Background removal** | Documents with stamps, watermarks, or decorative borders |
+| **Resolution normalization** | Scans arrive at different DPI — normalize to a standard before OCR |
+| **Page segmentation** | Full-page documents need to be split into individual text lines before TrOCR |
+
+> "Preprocessing is where domain knowledge pays off most. The right steps depend entirely on the specific document types you're processing. For Ancestry's 1880 census records you'd tune differently than for 1950 immigration forms — the paper quality, ink type, and scan conditions are completely different."
+
+---
+
 ## The Two Models
 
 ### OCR — TrOCR
